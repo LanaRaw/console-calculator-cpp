@@ -2,41 +2,48 @@
 #include <cstdio>
 
 double calculate(double firstNumber, double secondNumber, char operation);
+double getValidNumber(const char* prompt);
+char getValidOperation();
+void clearInputBuffer();
 
 int main() {
     double firstNumber;
     double secondNumber;
     char operation;
     char continueChoice;
+    int validInput;
 
     printf("=== Console Calculator ===\n");
 
     do {
-        printf("\nEnter first number: ");
-        scanf("%lf", &firstNumber);
+        printf("\n");
+        firstNumber = getValidNumber("Enter first number: ");
+        operation = getValidOperation();
 
-        printf("Enter operation (+, -, *, /, %%): ");
-        scanf(" %c", &operation);
+        do {
+            secondNumber = getValidNumber("Enter second number: ");
 
-        printf("Enter second number: ");
-        scanf("%lf", &secondNumber);
+            if ((operation == '/' || operation == '%') && secondNumber == 0) {
+                printf("Error: division by zero! Please enter a non-zero number.\n");
+                validInput = 0;
+            }
+            else {
+                validInput = 1;
+            }
+        } while (!validInput);
 
         double result = calculate(firstNumber, secondNumber, operation);
 
-        if (operation != '/' && operation != '%') {
-            printf("Result: %.2f\n", result);
+        if (operation == '%') {
+            printf("Result: %d\n", static_cast<int>(result));
         }
-        else if (secondNumber != 0) {
-            if (operation == '/') {
-                printf("Result: %.2f\n", result);
-            }
-            else if (operation == '%') {
-                printf("Result: %d\n", static_cast<int>(result));
-            }
+        else {
+            printf("Result: %.2f\n", result);
         }
 
         printf("\nDo another calculation? (y/n): ");
         scanf(" %c", &continueChoice);
+        clearInputBuffer();
 
     } while (continueChoice == 'y' || continueChoice == 'Y');
 
@@ -44,10 +51,50 @@ int main() {
     return 0;
 }
 
-// реализация функции calculate
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+double getValidNumber(const char* prompt) {
+    double number;
+    int result;
+
+    do {
+        printf("%s", prompt);
+        result = scanf("%lf", &number);
+        clearInputBuffer();
+
+        if (result != 1) {
+            printf("Error: please enter a valid number!\n");
+        }
+
+    } while (result != 1);
+
+    return number;
+}
+
+char getValidOperation() {
+    char operation;
+    int result;
+
+    do {
+        printf("Enter operation (+, -, *, /, %%): ");
+        result = scanf(" %c", &operation);
+        clearInputBuffer();
+
+        if (result == 1 && (operation == '+' || operation == '-' ||
+            operation == '*' || operation == '/' || operation == '%')) {
+            return operation;
+        }
+
+        printf("Error: valid operations are: +, -, *, /, %%\n");
+
+    } while (1);
+}
+
 double calculate(double firstNumber, double secondNumber, char operation) {
     double result = 0;
-    bool validOperation = true;
 
     switch (operation) {
     case '+':
@@ -60,33 +107,12 @@ double calculate(double firstNumber, double secondNumber, char operation) {
         result = firstNumber * secondNumber;
         break;
     case '/':
-        if (secondNumber != 0.0) {
-            result = firstNumber / secondNumber;
-        }
-        else {
-            printf("Error: division by zero!\n");
-            validOperation = false;
-        }
+        result = firstNumber / secondNumber;
         break;
     case '%':
-        if (secondNumber != 0) {
-            result = static_cast<int>(firstNumber) % static_cast<int>(secondNumber);
-        }
-        else {
-            printf("Error: division by zero!\n");
-            validOperation = false;
-        }
+        result = static_cast<int>(firstNumber) % static_cast<int>(secondNumber);
         break;
-    default:
-        printf("Error: invalid operation '%c'\n", operation);
-        validOperation = false;
-        break;
-
-        if (validOperation) {
-            return result;
-        }
-        else {
-            return 0;
-        }
     }
+
+    return result;
 }
